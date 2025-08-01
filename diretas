@@ -655,8 +655,8 @@
                 const doc = new jsPDF();
                 const tableData = Object.values(resumoMateriais).map(m => [m.categoria, m.nome, m.quantidade.toFixed(2), m.unidade]);
                 const dataFormatada = new Date().toLocaleString('pt-BR');
-                doc.addImage("https://cdn-icons-png.flaticon.com/512/2760/2760298.png", 'PNG', 15, 10, 20, 20);
-                doc.setFontSize(20); doc.text("Memória de Cálculo de Materiais", 40, 22);
+                
+                doc.setFontSize(20); doc.text("Memória de Cálculo de Materiais", 15, 22);
                 doc.setFontSize(10);
                 doc.text(`O.S: ${infoObra.os || 'Não especificada'}`, 15, 40);
                 doc.text(`Encarregado: ${infoObra.encarregado || 'Não especificado'}`, 15, 45);
