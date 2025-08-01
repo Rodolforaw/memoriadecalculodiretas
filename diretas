@@ -59,13 +59,13 @@
         // --- Base de Dados de Coeficientes ---
         const COEFICIENTES = {
             aco: { '5': 0.154, '6.3': 0.245, '8': 0.395, '10': 0.617, '12.5': 0.963, '16': 1.578, arameQueimadoFator: 0.015 },
-            drenagem: { calafetacaoAreia: 0.009, calafetacaoCimento: 0.6, distanciaJuntas: 1, baseRachaoEspessura: 0.1, reaterroBritaEspessura: 0.1 },
+            drenagem: { calafetacaoAreia: 0.009, calafetacaoCimento: 0.6, distanciaJuntas: 1 },
             caixaPassagem: { assentamentoBlocoAreia: 0.045, assentamentoBlocoCimento: 18, chapiscoAreia: 0.02, chapiscoCimento: 6, emocoAreia: 0.03, emocoCimento: 12, dimensaoBloco: 0.08, acoPorMetroCubico: 85, calafetacaoTampaCimento: 2.5, calafetacaoTampaAreia: 0.005 },
             meioFio: { assentamentoPoPedra: 0.02, assentamentoBrita: 0.02, juntaAreia: 0.006, juntaCimento: 0.9, distanciaJuntas: 2 },
             calcada: { baseSaibroEspessura: 0.08, concretoEspessura: 0.1, pregoPorMetroForma: 0.05 },
             calcadaIntertravado: { baseSaibroEspessura: 0.05, assentamentoPoPedraEspessura: 0.03 },
             alvenaria: { blocosPorM2: { '9x19x39': 12.5, '14x19x39': 12.5 }, assentamentoAreia: 0.015, assentamentoCimento: 6, chapiscoAreia: 0.005, chapiscoCimento: 2.5, emocoAreia: 0.02, emocoCimento: 10 },
-            servicos: { empolamentoSolo: 1.25 }
+            servicos: { empolamentoSolo: 1.25, baseRachaoEspessura: 0.1, reaterroBritaEspessura: 0.1 }
         };
 
         // --- Componente Genérico de Card de Formulário ---
@@ -241,6 +241,8 @@
                     { nome: 'Bloco de Concreto 9x19x39cm', quantidade: areaTotalParedes / caixaPassagem.dimensaoBloco, unidade: 'un', categoria: 'Drenagem' },
                     { nome: 'Areia p/ Assentamento de Bloco (BL)', quantidade: areaTotalParedes * caixaPassagem.assentamentoBlocoAreia, unidade: 'm³', categoria: 'Drenagem' },
                     { nome: 'Cimento p/ Assentamento de Bloco (BL)', quantidade: areaTotalParedes * caixaPassagem.assentamentoBlocoCimento, unidade: 'kg', categoria: 'Drenagem' },
+                    { nome: 'Areia p/ Chapisco Interno (BL)', quantidade: areaTotalParedes * caixaPassagem.chapiscoAreia, unidade: 'm³', categoria: 'Drenagem' },
+                    { nome: 'Cimento p/ Chapisco Interno (BL)', quantidade: areaTotalParedes * caixaPassagem.chapiscoCimento, unidade: 'kg', categoria: 'Drenagem' },
                     { nome: 'Areia p/ Emboço Interno (BL)', quantidade: areaTotalParedes * caixaPassagem.emocoAreia, unidade: 'm³', categoria: 'Drenagem' },
                     { nome: 'Cimento p/ Emboço Interno (BL)', quantidade: areaTotalParedes * caixaPassagem.emocoCimento, unidade: 'kg', categoria: 'Drenagem' },
                     { nome: `Concreto Usinado FCK 20MPa p/ Radier (BL)`, quantidade: volumeTotalRadier, unidade: 'm³', categoria: 'Drenagem' },
@@ -502,6 +504,38 @@
                 </FormCard>
             );
         }
+        
+        function BaseGranularForm({ onCalcular }) {
+            const [comprimento, setComprimento] = useState('');
+            const [largura, setLargura] = useState('');
+            const [espessura, setEspessura] = useState(0.1);
+            const [material, setMaterial] = useState('rachao');
+            const calcular = () => {
+                const comp = parseFloat(comprimento);
+                const larg = parseFloat(largura);
+                const esp = parseFloat(espessura);
+                if (isNaN(comp) || isNaN(larg) || isNaN(esp)) { alert("Insira valores válidos."); return; }
+                const volumeTotal = comp * larg * esp;
+                const materiais = [
+                    { nome: material === 'rachao' ? 'Base de Rachão' : 'Base de Brita Graduada', quantidade: volumeTotal, unidade: 'm³', categoria: 'Serviços' },
+                ];
+                onCalcular('Base Granular', materiais);
+                setComprimento(''); setLargura('');
+            };
+            return (
+                <FormCard title="2. Base Granular" onCalcular={calcular}>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <input type="number" value={comprimento} onChange={e => setComprimento(e.target.value)} placeholder="Comprimento (m)" className="w-full border-gray-300 rounded-md p-2 shadow-sm focus:ring-red-800 focus:border-red-800" />
+                        <input type="number" value={largura} onChange={e => setLargura(e.target.value)} placeholder="Largura (m)" className="w-full border-gray-300 rounded-md p-2 shadow-sm focus:ring-red-800 focus:border-red-800" />
+                        <input type="number" value={espessura} onChange={e => setEspessura(e.target.value)} placeholder="Espessura (m)" className="w-full border-gray-300 rounded-md p-2 shadow-sm focus:ring-red-800 focus:border-red-800" />
+                        <select value={material} onChange={e => setMaterial(e.target.value)} className="w-full border-gray-300 rounded-md p-2 bg-white shadow-sm focus:ring-red-800 focus:border-red-800">
+                            <option value="rachao">Rachão</option>
+                            <option value="brita">Brita Graduada</option>
+                        </select>
+                    </div>
+                </FormCard>
+            );
+        }
 
         // --- Páginas ---
         const PageWrapper = ({ children, ultimoAdicionado, setUltimoAdicionado }) => (
@@ -513,7 +547,7 @@
         const DrenagemPage = (props) => (<PageWrapper {...props}><RedeDrenagemForm onCalcular={props.onCalcular} /><CaixaPassagemForm onCalcular={props.onCalcular} /><CaixaColetoraForm onCalcular={props.onCalcular} /></PageWrapper>);
         const PavimentacaoPage = (props) => (<PageWrapper {...props}><MeioFioForm onCalcular={props.onCalcular} /><CalcadaConcretoForm onCalcular={props.onCalcular} /><CalcadaIntertravadoForm onCalcular={props.onCalcular} /></PageWrapper>);
         const EstruturasPage = (props) => (<PageWrapper {...props}><AcoForm onCalcular={props.onCalcular} /><AlvenariaForm onCalcular={props.onCalcular} /></PageWrapper>);
-        const ServicosPage = (props) => (<PageWrapper {...props}><EscavacaoForm onCalcular={props.onCalcular} /></PageWrapper>);
+        const ServicosPage = (props) => (<PageWrapper {...props}><EscavacaoForm onCalcular={props.onCalcular} /><BaseGranularForm onCalcular={props.onCalcular} /></PageWrapper>);
 
         function ResumoPage({ resumo, onExportPDF, onExportXLSX, onClear }) {
             const temMateriais = Object.keys(resumo).length > 0;
